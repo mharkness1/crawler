@@ -32,14 +32,6 @@ func normalizeURL(rawURL string) (string, error) {
 		normalizedUrl += path
 	}
 	normalizedUrl += query
-	/*
-		parsedURL.Scheme // "http" or "https"
-		parsedURL.Path   // The path portion
-		parsedURL.Host   // Contains both the hostname and port
-		parsedURL.RawQuery // Query parameters
-		General URL structure:
-		[scheme:][//[userinfo@]host][/]path[?query][#fragment]
-	*/
 
 	return normalizedUrl, nil
 }
