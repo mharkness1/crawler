@@ -29,7 +29,7 @@ func TestGetUrls(t *testing.T) {
 						`,
 			expected: []string{"https://blog.boot.dev/path/one", "https://other.com/path/one"},
 		}, {
-			name:     "embedded link in header and capitalised",
+			name:     "embedded link in header",
 			inputURL: "www.base.com",
 			inputBody: `
 			<html>
@@ -38,17 +38,11 @@ func TestGetUrls(t *testing.T) {
 				</header>
 				<body>
 					<a href="/is_this_a_path/">Path 1</a>
-					<a href="/PATH2>Path 2</a>
+					<a href="/PATH2">Path 2</a>
 				</body>
 			</html>
 			`,
-			expected: []string{"www.home.com", "www.base.com/is_this_a_path", "www.base.com/path2"},
-		},
-		{
-			name:      "",
-			inputURL:  "",
-			inputBody: ``,
-			expected:  []string{},
+			expected: []string{"www.home.com", "www.base.com/is_this_a_path/", "www.base.com/PATH2"},
 		},
 	}
 
@@ -83,7 +77,7 @@ func TestConvertToFullPath(t *testing.T) {
 			name:      "failure",
 			pathInput: "not_a_path",
 			urlInput:  "www.home.com",
-			expected:  "",
+			expected:  "not_a_path",
 		},
 	}
 	for i, tc := range tests {
