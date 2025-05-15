@@ -22,10 +22,8 @@ func getURLsFromHTML(htmlBody, rawBaseURL string) ([]string, error) {
 				if j.Key == "href" {
 					foundURLs = append(foundURLs, j.Val)
 				}
-				continue
 			}
 		}
-		continue
 	}
 
 	for i, path := range foundURLs {
