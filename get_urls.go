@@ -8,7 +8,7 @@ import (
 
 // TO DO: ADD MORE TESTS
 func getURLsFromHTML(htmlBody, rawBaseURL string) ([]string, error) {
-	var foundURLs []string
+	var foundURLs []string = []string{}
 	r := strings.NewReader(htmlBody)
 	parsedHTML, err := html.Parse(r)
 	if err != nil {

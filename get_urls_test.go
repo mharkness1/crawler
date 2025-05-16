@@ -44,6 +44,43 @@ func TestGetUrls(t *testing.T) {
 			`,
 			expected: []string{"www.home.com", "www.base.com/is_this_a_path/", "www.base.com/PATH2"},
 		},
+		{
+			name:     "Listed links",
+			inputURL: "www.home.com",
+			inputBody: `
+			<html>
+				<header>
+					<h1>No link</h1>
+					<nav>
+					<ul>
+					<li><a href="www.home.com">Home</a>></li>
+					<li><a href="www.home.com/about">About</a></li>
+					<li><a href="/portfolio">Portfoli</a></li>
+					</ul>
+					</nav>
+				</header>
+				<body>
+					<h2>Header 2</h2>
+				</body>
+			</html>			
+			`,
+			expected: []string{"www.home.com", "www.home.com/about", "www.home.com/portfolio"},
+		},
+		{
+			name:     "untagged plain links",
+			inputURL: "www.home.com",
+			inputBody: `
+			<html>
+				<header>
+					<h1>Title</h1>
+				</header>
+				<body>
+					<p>www.home.com</p>
+				</body>
+			</html>
+			`,
+			expected: []string{},
+		},
 	}
 
 	for i, tc := range tests {
@@ -78,6 +115,12 @@ func TestConvertToFullPath(t *testing.T) {
 			pathInput: "not_a_path",
 			urlInput:  "www.home.com",
 			expected:  "not_a_path",
+		},
+		{
+			name:      "multiple slashes",
+			pathInput: "/this/is/a/path/",
+			urlInput:  "www.home.com",
+			expected:  "www.home.com/this/is/a/path/",
 		},
 	}
 	for i, tc := range tests {
