@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/url"
+	"path"
 	"strings"
 )
 
@@ -11,27 +12,20 @@ func normalizeURL(rawURL string) (string, error) {
 		return "", err
 	}
 
-	// Convert host to lowercase
-	host := strings.ToLower(parsedUrl.Host)
-
-	// Handle path - ensure it doesn't have a trailing slash
-	path := strings.ToLower(parsedUrl.Path)
-	if strings.HasSuffix(path, "/") {
-		path = path[:len(path)-1]
+	// Construct a normalized URL
+	normalized := url.URL{
+		Scheme: parsedUrl.Scheme,
+		Host:   strings.ToLower(parsedUrl.Host),
+		Path:   parsedUrl.Path,
 	}
 
-	// Handle query parameters
-	var query string = ""
-	if parsedUrl.RawQuery != "" {
-		query = "?" + parsedUrl.RawQuery
+	// Clean the path to remove extra slashes and normalize
+	normalized.Path = path.Clean(normalized.Path)
+
+	// If the path was originally "/" it will be empty after clean
+	if parsedUrl.Path == "/" || parsedUrl.Path == "" {
+		normalized.Path = ""
 	}
 
-	// Connect host and path with a single slash
-	normalizedUrl := host
-	if path != "" {
-		normalizedUrl += path
-	}
-	normalizedUrl += query
-
-	return normalizedUrl, nil
+	return normalized.String(), nil
 }

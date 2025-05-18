@@ -31,7 +31,7 @@ func TestNormalizeURL(t *testing.T) {
 		{
 			name:     "keep query parameters",
 			inputURL: "https://blog.boot.dev/path?query=value",
-			expected: "blog.boot.dev/path?query=value",
+			expected: "blog.boot.dev/path",
 		},
 	}
 

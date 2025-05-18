@@ -6,7 +6,6 @@ import (
 	"golang.org/x/net/html"
 )
 
-// TO DO: ADD MORE TESTS
 func getURLsFromHTML(htmlBody, rawBaseURL string) ([]string, error) {
 	var foundURLs []string = []string{}
 	r := strings.NewReader(htmlBody)
@@ -34,9 +33,11 @@ func getURLsFromHTML(htmlBody, rawBaseURL string) ([]string, error) {
 	return foundURLs, nil
 }
 
+// Tidy this up, its disgusting
 func convertToFullPath(rawPath, baseUrl string) string {
 	if !strings.HasPrefix(rawPath, "/") {
 		return rawPath
 	}
+	rawPath = strings.TrimLeft(rawPath, "/")
 	return baseUrl + rawPath
 }
