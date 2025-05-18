@@ -19,7 +19,11 @@ func main() {
 	fmt.Printf("starting crawl of: %s", initialURL)
 	htmlBody, err := getHTML(initialURL)
 	if err != nil {
-		// handle error
+		fmt.Printf("error retreiving html: %v", err)
 	}
 	fmt.Printf("%s", htmlBody)
+}
+
+func crawlPage(rawBaseURL, rawCurrentURL string, pages map[string]int) {
+
 }
