@@ -1,31 +1,22 @@
 package main
 
 import (
+	"fmt"
 	"net/url"
-	"path"
 	"strings"
 )
 
 func normalizeURL(rawURL string) (string, error) {
-	parsedUrl, err := url.Parse(rawURL)
+	parsedURL, err := url.Parse(rawURL)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("couldn't parse URL: %w", err)
 	}
 
-	// Construct a normalized URL
-	normalized := url.URL{
-		Scheme: parsedUrl.Scheme,
-		Host:   strings.ToLower(parsedUrl.Host),
-		Path:   parsedUrl.Path,
-	}
+	fullPath := parsedURL.Host + parsedURL.Path
 
-	// Clean the path to remove extra slashes and normalize
-	normalized.Path = path.Clean(normalized.Path)
+	fullPath = strings.ToLower(fullPath)
 
-	// If the path was originally "/" it will be empty after clean
-	if parsedUrl.Path == "/" || parsedUrl.Path == "" {
-		normalized.Path = ""
-	}
+	fullPath = strings.TrimSuffix(fullPath, "/")
 
-	return normalized.String(), nil
+	return fullPath, nil
 }

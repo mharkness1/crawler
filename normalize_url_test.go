@@ -33,6 +33,16 @@ func TestNormalizeURL(t *testing.T) {
 			inputURL: "https://blog.boot.dev/path?query=value",
 			expected: "blog.boot.dev/path",
 		},
+		{
+			name:     "additional test",
+			inputURL: "https://www.wagslane.dev/tags/",
+			expected: "www.wagslane.dev/tags",
+		},
+		{
+			name:     "additional test 2",
+			inputURL: "https://www.wagslane.dev/tags",
+			expected: "www.wagslane.dev/tags",
+		},
 	}
 
 	for i, tc := range tests {

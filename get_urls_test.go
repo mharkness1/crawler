@@ -1,133 +1,130 @@
 package main
 
 import (
+	"net/url"
 	"reflect"
+	"strings"
 	"testing"
 )
 
-func TestGetUrls(t *testing.T) {
-	tests := []struct {
-		name      string
-		inputURL  string
-		inputBody string
-		expected  []string
+func TestGetURLsFromHTML(t *testing.T) {
+	cases := []struct {
+		name          string
+		inputURL      string
+		inputBody     string
+		expected      []string
+		errorContains string
 	}{
 		{
-			name:     "standard functionality <a> tag",
+			name:     "absolute URL",
 			inputURL: "https://blog.boot.dev",
 			inputBody: `
-						<html>
-							<body>
-								<a href="/path/one">
-									<span>Boot.dev</span>
-								</a>
-								<a href="https://other.com/path/one">
-									<span>Boot.dev</span>
-								</a>
-							</body>
-						</html>
-						`,
+<html>
+	<body>
+		<a href="https://blog.boot.dev">
+			<span>Boot.dev</span>
+		</a>
+	</body>
+</html>
+`,
+			expected: []string{"https://blog.boot.dev"},
+		},
+		{
+			name:     "relative URL",
+			inputURL: "https://blog.boot.dev",
+			inputBody: `
+<html>
+	<body>
+		<a href="/path/one">
+			<span>Boot.dev</span>
+		</a>
+	</body>
+</html>
+`,
+			expected: []string{"https://blog.boot.dev/path/one"},
+		},
+		{
+			name:     "absolute and relative URLs",
+			inputURL: "https://blog.boot.dev",
+			inputBody: `
+<html>
+	<body>
+		<a href="/path/one">
+			<span>Boot.dev</span>
+		</a>
+		<a href="https://other.com/path/one">
+			<span>Boot.dev</span>
+		</a>
+	</body>
+</html>
+`,
 			expected: []string{"https://blog.boot.dev/path/one", "https://other.com/path/one"},
-		}, {
-			name:     "embedded link in header",
-			inputURL: "www.base.com",
-			inputBody: `
-			<html>
-				<header>
-					<h1> Bluff <a href="www.home.com">Link</a></h1>
-				</header>
-				<body>
-					<a href="/is_this_a_path/">Path 1</a>
-					<a href="/PATH2">Path 2</a>
-				</body>
-			</html>
-			`,
-			expected: []string{"www.home.com", "www.base.com/is_this_a_path/", "www.base.com/PATH2"},
 		},
 		{
-			name:     "Listed links",
-			inputURL: "www.home.com",
+			name:     "no href",
+			inputURL: "https://blog.boot.dev",
 			inputBody: `
-			<html>
-				<header>
-					<h1>No link</h1>
-					<nav>
-					<ul>
-					<li><a href="www.home.com">Home</a>></li>
-					<li><a href="www.home.com/about">About</a></li>
-					<li><a href="/portfolio">Portfoli</a></li>
-					</ul>
-					</nav>
-				</header>
-				<body>
-					<h2>Header 2</h2>
-				</body>
-			</html>			
-			`,
-			expected: []string{"www.home.com", "www.home.com/about", "www.home.com/portfolio"},
+<html>
+	<body>
+		<a>
+			<span>Boot.dev></span>
+		</a>
+	</body>
+</html>
+`,
+			expected: nil,
 		},
 		{
-			name:     "untagged plain links",
-			inputURL: "www.home.com",
+			name:     "bad HTML",
+			inputURL: "https://blog.boot.dev",
 			inputBody: `
-			<html>
-				<header>
-					<h1>Title</h1>
-				</header>
-				<body>
-					<p>www.home.com</p>
-				</body>
-			</html>
-			`,
-			expected: []string{},
+<html body>
+	<a href="path/one">
+		<span>Boot.dev></span>
+	</a>
+</html body>
+`,
+			expected: []string{"https://blog.boot.dev/path/one"},
+		},
+		{
+			name:     "invalid href URL",
+			inputURL: "https://blog.boot.dev",
+			inputBody: `
+<html>
+	<body>
+		<a href=":\\invalidURL">
+			<span>Boot.dev</span>
+		</a>
+	</body>
+</html>
+`,
+			expected: nil,
 		},
 	}
 
-	for i, tc := range tests {
+	for i, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			actual, err := getURLsFromHTML(tc.inputBody, tc.inputURL)
+			baseURL, err := url.Parse(tc.inputURL)
 			if err != nil {
-				t.Errorf("Test %v - '%s' FAIL: unexpected error: %v", i, tc.name, err)
+				t.Errorf("Test %v - '%s' FAIL: couldn't parse input URL: %v", i, tc.name, err)
 				return
 			}
-			if !reflect.DeepEqual(tc.expected, actual) {
-				t.Errorf("Test %v - '%s' FAIL: expected output: %v, actual: %v", i, tc.name, tc.expected, actual)
-			}
-		})
-	}
-}
 
-func TestConvertToFullPath(t *testing.T) {
-	tests := []struct {
-		name      string
-		pathInput string
-		urlInput  string
-		expected  string
-	}{
-		{
-			name:      "standard test",
-			pathInput: "/path",
-			urlInput:  "www.boot.dev",
-			expected:  "www.boot.dev/path",
-		},
-		{
-			name:      "failure",
-			pathInput: "not_a_path",
-			urlInput:  "www.home.com",
-			expected:  "not_a_path",
-		},
-		{
-			name:      "multiple slashes",
-			pathInput: "/this/is/a/path/",
-			urlInput:  "www.home.com",
-			expected:  "www.home.com/this/is/a/path/",
-		},
-	}
-	for i, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			actual := convertToFullPath(tc.pathInput, tc.urlInput)
-			if actual != tc.expected {
-				t.Errorf("Test %v - %s FAIL: expected URL: %v, actual: %v", i, tc.name, tc.expected, actual)
+			actual, err := getURLsFromHTML(tc.inputBody, baseURL)
+			if err != nil && !strings.Contains(err.Error(), tc.errorContains) {
+				t.Errorf("Test %v - '%s' FAIL: unexpected error: %v", i, tc.name, err)
+				return
+			} else if err != nil && tc.errorContains == "" {
+				t.Errorf("Test %v - '%s' FAIL: unexpected error: %v", i, tc.name, err)
+				return
+			} else if err == nil && tc.errorContains != "" {
+				t.Errorf("Test %v - '%s' FAIL: expected error containing '%v', got none.", i, tc.name, tc.errorContains)
+				return
+			}
+
+			if !reflect.DeepEqual(actual, tc.expected) {
+				t.Errorf("Test %v - '%s' FAIL: expected URLs %v, got URLs %v", i, tc.name, tc.expected, actual)
+				return
 			}
 		})
 	}
